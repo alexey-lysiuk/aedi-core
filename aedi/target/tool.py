@@ -32,8 +32,8 @@ class CMakeTarget(base.CMakeTarget):
 
     def prepare_source(self, state: BuildState):
         state.download_source(
-            'https://github.com/Kitware/CMake/releases/download/v3.31.4/cmake-3.31.4.tar.gz',
-            'a6130bfe75f5ba5c73e672e34359f7c0a1931521957e8393a5c2922c8b0f7f25')
+            'https://github.com/Kitware/CMake/releases/download/v3.31.7/cmake-3.31.7.tar.gz',
+            'a6d2eb1ebeb99130dfe63ef5a340c3fdb11431cce3d7ca148524c125924cea68')
 
     def configure(self, state: BuildState):
         # Bootstrap native CMake binary
