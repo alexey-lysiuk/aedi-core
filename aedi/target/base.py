@@ -447,7 +447,10 @@ class ConfigureMakeStaticDependencyTarget(ConfigureMakeDependencyTarget):
         super().__init__(name)
 
     def configure(self, state: BuildState):
-        state.options['--enable-shared'] = 'no'
+        opts = state.options
+        opts['--enable-shared'] = 'no'
+        opts['--enable-static'] = 'yes'
+
         super().configure(state)
 
 
