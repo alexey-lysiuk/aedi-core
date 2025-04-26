@@ -451,6 +451,37 @@ class CMakeTarget(BuildTarget):
 
         subprocess.run(args, check=True, cwd=state.build_path, env=state.environment)
 
+    def keep_module_target(self, state: BuildState, target: str, module_paths: typing.Sequence[Path] = ()):
+        import_patterns = (
+            r'list\s*\(APPEND\s+_cmake_import_check_targets\s+(?P<target>[\w:-]+)[\s)]',
+            r'list\s*\(APPEND\s+_cmake_import_check_files_for_(?P<target>[\w:-]+)\s',
+        )
+        import_regexes = [re.compile(regex, re.IGNORECASE) for regex in import_patterns]
+
+        def _keep_target(line: str):
+            for regex in import_regexes:
+                match = regex.match(line)
+
+                if match and match.group('target') != target:
+                    return None
+
+            return line
+
+        probe_modules = False
+
+        if not module_paths:
+            default_modules_path = state.install_path / 'lib' / 'cmake' / self.name
+            default_module_name = 'targets-release.cmake'
+            module_paths = (
+                default_modules_path / default_module_name,
+                default_modules_path / (self.name + default_module_name)
+            )
+            probe_modules = True
+
+        for module_path in module_paths:
+            if not probe_modules or module_path.exists():
+                self.update_text_file(module_path, _keep_target)
+
 
 class ConfigureMakeDependencyTarget(ConfigureMakeTarget):
     def __init__(self, name=None):
@@ -500,37 +531,6 @@ class CMakeStaticDependencyTarget(CMakeDependencyTarget):
     def configure(self, state: BuildState):
         state.options['BUILD_SHARED_LIBS'] = 'NO'
         super().configure(state)
-
-    def keep_module_target(self, state: BuildState, target: str, module_paths: typing.Sequence[Path] = ()):
-        import_patterns = (
-            r'list\s*\(APPEND\s+_cmake_import_check_targets\s+(?P<target>[\w:-]+)[\s)]',
-            r'list\s*\(APPEND\s+_cmake_import_check_files_for_(?P<target>[\w:-]+)\s',
-        )
-        import_regexes = [re.compile(regex, re.IGNORECASE) for regex in import_patterns]
-
-        def _keep_target(line: str):
-            for regex in import_regexes:
-                match = regex.match(line)
-
-                if match and match.group('target') != target:
-                    return None
-
-            return line
-
-        probe_modules = False
-
-        if not module_paths:
-            default_modules_path = state.install_path / 'lib' / 'cmake' / self.name
-            default_module_name = 'targets-release.cmake'
-            module_paths = (
-                default_modules_path / default_module_name,
-                default_modules_path / (self.name + default_module_name)
-            )
-            probe_modules = True
-
-        for module_path in module_paths:
-            if not probe_modules or module_path.exists():
-                self.update_text_file(module_path, _keep_target)
 
 
 class SingleExeCTarget(MakeTarget):
