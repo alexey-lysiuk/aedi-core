@@ -169,16 +169,35 @@ class BuildTarget(Target):
     def update_config_script(path: Path, processor: typing.Optional[typing.Callable] = None):
         BuildTarget._update_variables_file(path, r'$(cd "${0%/*}/.."; pwd)', processor)
 
-    @staticmethod
-    def update_pc_file(path: Path, processor: typing.Optional[typing.Callable] = None):
-        BuildTarget._update_variables_file(path, '', processor, quotes=False)
-
     def update_pc_files(self, state: BuildState):
+        install_path = state.install_path
+        includedir = '${includedir}'
+        libdir = '${libdir}'
+        prefix = '${prefix}'
+
+        replacements = (
+            # Order of replacements is important, prefix subdirectories before prefix itself
+            (str(state.include_path), includedir),
+            (str(install_path / 'include'), includedir),
+            (str(state.lib_path), libdir),
+            (str(install_path / 'lib'), libdir),
+            (str(state.prefix_path), prefix),
+            (str(install_path), prefix),
+        )
+
+        def processor(pcfile: Path, line: str) -> str:
+            line = self._process_pkg_config(pcfile, line)
+
+            for replacement in replacements:
+                line = line.replace(replacement[0], replacement[1])
+
+            return line
+
         for root, _, files in os.walk(state.install_path, followlinks=True):
             for filename in files:
                 if filename.endswith('.pc'):
                     file_path = Path(root) / filename
-                    BuildTarget.update_pc_file(file_path, self._process_pkg_config)
+                    BuildTarget._update_variables_file(file_path, '', processor, quotes=False)
 
     @staticmethod
     def _process_pkg_config(pcfile: Path, line: str) -> str:
