@@ -524,6 +524,15 @@ class CMakeDependencyTarget(CMakeTarget):
         self.install(state)
 
 
+class CMakeSharedDependencyTarget(CMakeDependencyTarget):
+    def __init__(self, name=None):
+        super().__init__(name)
+
+    def configure(self, state: BuildState):
+        state.options['BUILD_SHARED_LIBS'] = 'YES'
+        super().configure(state)
+
+
 class CMakeStaticDependencyTarget(CMakeDependencyTarget):
     def __init__(self, name=None):
         super().__init__(name)
