@@ -253,7 +253,7 @@ class BuildState:
 
         assert patch_path.exists()
 
-        args = ['patch', '--strip=1', '--input=' + str(patch_path)]
+        args = ['/usr/bin/patch', '--strip=1', f'--input={patch_path}']
         dry_run_args = args + ['--dry-run', '--force']
 
         def dry_run():
