@@ -254,15 +254,25 @@ class BuildState:
         assert patch_path.exists()
 
         args = ['patch', '--strip=1', '--input=' + str(patch_path)]
-
-        # Check if patch is already applied
         dry_run_args = args + ['--dry-run', '--force']
-        dry_run = subprocess.run(dry_run_args, cwd=extract_path, env=self.environment,
-                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        if dry_run.returncode == 0:
-            # Patch wasn't applied yet, do it now
-            subprocess.run(args, check=True, cwd=extract_path, env=self.environment)
+        def dry_run():
+            return subprocess.run(dry_run_args, cwd=extract_path, env=self.environment,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+
+        # Try to apply patch without writing changes to disk
+        if dry_run() == 1:
+            # Patch cannot be applied, change direction to check if it's already applied
+            dry_run_args.append('--reverse')
+
+            if dry_run() == 0:
+                return  # patch is already applied
+            else:
+                # Direct and reversed patch applications failed, something is wrong with it
+                raise RuntimeError(f'Patch {patch} could not be applied')
+
+        # Patch wasn't applied yet, do it now
+        subprocess.run(args, check=True, cwd=extract_path, env=self.environment)
 
     def run_pkg_config(self, *args) -> str:
         os.makedirs(self.build_path, exist_ok=True)
