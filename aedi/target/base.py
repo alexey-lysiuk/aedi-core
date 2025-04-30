@@ -580,7 +580,6 @@ class MesonTarget(BuildTarget):
             'setup',
             f'--prefix={state.install_path}',
             '--buildtype=release',
-            '--default-library=static',
         ]
 
         if state.xcode:
@@ -637,6 +636,24 @@ cpu_family = '{cpu_family}'
 cpu = '{cpu}'
 endian = 'little'
 ''')
+
+
+class MesonSharedTarget(MesonTarget):
+    def __init__(self, name=None):
+        super().__init__(name)
+
+    def configure(self, state: BuildState):
+        state.options['default_library'] = 'shared'
+        super().configure(state)
+
+
+class MesonStaticTarget(MesonTarget):
+    def __init__(self, name=None):
+        super().__init__(name)
+
+    def configure(self, state: BuildState):
+        state.options['default_library'] = 'static'
+        super().configure(state)
 
 
 class MakeMainTarget(MakeTarget):
