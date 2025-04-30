@@ -84,6 +84,7 @@ class BuildTarget(Target):
             str(state.bin_path),
             env['PATH'],
         ])
+        env['PYTHONPATH'] = str(state.lib_path / 'python')
 
         if state.xcode:
             return
