@@ -236,6 +236,11 @@ class Builder(object):
         self._create_state(args)
 
         state = self._state
+
+        # Remove quarantine attribute from entire directory tree ignoring potential errors
+        xattr_args = ('/usr/bin/xattr', '-d', '-r', 'com.apple.quarantine', state.root_path)
+        subprocess.run(xattr_args, stderr=subprocess.DEVNULL)
+
         target = self._target
         target.prepare_source(state)
 
