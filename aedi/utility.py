@@ -155,16 +155,17 @@ def _unlink_missing(path: Path, seen_inos: set[int]):
             os.unlink(path)
 
 
-def hardlink_directories(src_paths: typing.Sequence[Path], dst_path: Path):
+def hardlink_directories(src_paths: typing.Sequence[Path], dst_path: Path, cleanup=True):
     seen_inos: set[int] = set()
 
     for src_path in src_paths:
         _hardlink_directory(src_path, dst_path, seen_inos)
 
-    for path in dst_path.iterdir():
-        _unlink_missing(path, seen_inos)
+    if cleanup:
+        for path in dst_path.iterdir():
+            _unlink_missing(path, seen_inos)
 
-    remove_empty_directories(dst_path)
+        remove_empty_directories(dst_path)
 
 
 # Case insensitive dictionary class from
