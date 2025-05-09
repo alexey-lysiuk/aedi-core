@@ -139,25 +139,29 @@ class BuildTarget(Target):
     @staticmethod
     def _update_variables_file(path: Path, prefix_value: str,
                                processor: typing.Optional[typing.Callable] = None, quotes: bool = True):
-        prefix = 'prefix='
-        exec_prefix = 'exec_prefix='
-        includedir = 'includedir='
-        libdir = 'libdir='
-
-        def quote(value: str) -> str:
-            return f'"{value}"' if quotes else value
+        known_variables = {
+            'prefix': prefix_value,
+            'exec_prefix': '${prefix}',
+            'includedir': '${prefix}/include',
+            'libdir': '${exec_prefix}/lib'
+        }
 
         def patch_proc(line: str) -> str:
+            equal_pos = line.find('=')
             patched_line = line
 
-            if line.startswith(prefix):
-                patched_line = prefix + quote(prefix_value) + os.linesep
-            elif line.startswith(exec_prefix):
-                patched_line = exec_prefix + quote('${prefix}') + os.linesep
-            elif line.startswith(includedir):
-                patched_line = includedir + quote('${prefix}/include') + os.linesep
-            elif line.startswith(libdir):
-                patched_line = libdir + quote('${exec_prefix}/lib') + os.linesep
+            if 0 < equal_pos < len(line) - 1:
+                variable = line[0:equal_pos]
+
+                if variable in known_variables:
+                    if line[equal_pos + 1] == '/':
+                        # Absolute path found, replace to variable value
+                        value = known_variables[variable]
+
+                        if quotes:
+                            value = f'"{value}"'
+
+                        patched_line = f'{variable}={value}\n'
 
             if processor:
                 patched_line = processor(path, patched_line)
