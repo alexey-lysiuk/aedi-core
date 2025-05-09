@@ -619,7 +619,7 @@ class MesonTarget(BuildTarget):
         assert cxx_compiler
 
         cpu = state.architecture()
-        cpu_family = 'arm' if 'arm64' == cpu else cpu
+        cpu_family = 'aarch64' if 'arm64' == cpu else cpu
 
         with open(path, 'w') as f:
             f.write(f'''
