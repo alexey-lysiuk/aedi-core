@@ -359,6 +359,7 @@ class CMakeTarget(BuildTarget):
 
     def __init__(self, name=None):
         super().__init__(name)
+        self.project_name = None
 
     def detect(self, state: BuildState) -> bool:
         if CMakeTarget.cached_project_name:
@@ -383,7 +384,7 @@ class CMakeTarget(BuildTarget):
 
             CMakeTarget.cached_project_name = project_name
 
-        return project_name == self.name
+        return project_name == self.name or project_name == self.project_name
 
     @staticmethod
     def _extract_project_name(line: str):
