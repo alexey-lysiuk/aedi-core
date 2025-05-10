@@ -277,7 +277,7 @@ class BuildState:
     def run_pkg_config(self, *args) -> str:
         os.makedirs(self.build_path, exist_ok=True)
 
-        args = (self.bin_path / 'pkg-config', '--static') + args
+        args = (str(self.bin_path / 'pkg-config'), '--static') + args
         result = subprocess.run(args, check=True, cwd=self.build_path, env=self.environment, stdout=subprocess.PIPE)
 
         return result.stdout.decode('utf-8').rstrip('\n')
