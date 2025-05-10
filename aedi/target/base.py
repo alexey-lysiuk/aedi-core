@@ -488,6 +488,20 @@ class CMakeTarget(BuildTarget):
             if not probe_modules or module_path.exists():
                 self.update_text_file(module_path, _keep_target)
 
+    @staticmethod
+    def link_xcode_deps(state, *deps):
+        configs = ('Debug', 'MinSizeRel', 'RelWithDebInfo', 'Release')
+
+        for config in configs:
+            os.makedirs(state.build_path / config, exist_ok=True)
+
+        for dep in deps:
+            for dylib in state.lib_path.glob(f'lib{dep}*.dylib'):
+                for config in configs:
+                    dest = state.build_path / config / dylib.name
+                    dest.unlink(missing_ok=True)
+                    dylib.link_to(dest)
+
 
 class ConfigureMakeDependencyTarget(ConfigureMakeTarget):
     def __init__(self, name=None):
